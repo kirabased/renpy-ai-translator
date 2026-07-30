@@ -1,0 +1,11 @@
+venv/
+__pycache__/
+*.pyc
+.env
+config.json
+providers.json
+tl_output/
+delete_after_translate/
+tl/
+*.log
+.state.json
