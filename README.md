@@ -1,4 +1,4 @@
-# MAS AI Ren'Py Game Translator
+# Ren'Py Game Translator
 
 An automated and intelligent tool for translating visual novels made in the Ren'Py engine. It uses AI providers to translate in-game dialogue and menus while perfectly preserving the game's code, variables, formatting tags, and syntax.
 
