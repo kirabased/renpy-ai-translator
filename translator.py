@@ -20,10 +20,10 @@ def extract_translatable_string(line):
     first_word = line.strip().split(' ')[0]
     if first_word in ignore_keywords: return None
         
-    menu_match = re.match(r'^\s*"(.*?)"\s*:$', line)
+    menu_match = re.match(r'^\s*"(.*?)"\s*:(?:[^"]*)$', line)
     if menu_match: return menu_match
         
-    dialogue_match = re.match(r'^\s*(?:[a-zA-Z0-9_]+\s+)*"(.*?)"(?:\s+with\s+[a-zA-Z0-9_]+)?\s*$', line)
+    dialogue_match = re.match(r'^\s*(?:[a-zA-Z0-9_]+\s+)*"(.*?)"(?:[^"]*)$', line)
     if dialogue_match:
         quote_start = line.find('"')
         if '=' in line[:quote_start]: return None
@@ -54,10 +54,10 @@ def process_file(filepath, input_folder):
             continue
             
         # Detecta blocos "translate strings" do SDK (old "texto" seguido de new "")
-        old_match = re.match(r'^(\s*)old\s+"(.*?)"\s*$', line)
+        old_match = re.match(r'^(\s*)old\s+"(.*?)"(?:[^"]*)$', line)
         if old_match and i + 1 < len(lines):
             next_line = lines[i+1]
-            new_match = re.match(r'^(\s*)new\s+"(.*)"\s*$', next_line)
+            new_match = re.match(r'^(\s*)new\s+"(.*)"(?:[^"]*)$', next_line)
             if new_match:
                 text_to_translate = old_match.group(2)
                 if text_to_translate.strip():
@@ -72,10 +72,10 @@ def process_file(filepath, input_folder):
                 continue
                 
         # Detecta blocos de diálogo do SDK (# char "texto original" seguido de char "")
-        dialogue_comment_match = re.match(r'^(\s*)#\s*((?:[a-zA-Z0-9_]+\s+)*)"(.*?)"\s*$', line)
+        dialogue_comment_match = re.match(r'^(\s*)#\s*((?:[a-zA-Z0-9_]+\s+)*)"(.*?)"(?:[^"]*)$', line)
         if dialogue_comment_match:
             prefix = dialogue_comment_match.group(2) or ""
-            next_regex = r'^(\s*)' + re.escape(prefix) + r'"(.*)"\s*$'
+            next_regex = r'^(\s*)' + re.escape(prefix) + r'"(.*)"(?:[^"]*)$'
             
             found = False
             # Busca nas próximas 4 linhas (para pular comandos voice/sound no meio do bloco)
