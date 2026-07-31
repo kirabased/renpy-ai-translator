@@ -75,6 +75,11 @@ def process_file(filepath, input_folder):
         dialogue_comment_match = re.match(r'^(\s*)#\s*((?:[a-zA-Z0-9_]+\s+)*)"(.*?)"(?:[^"]*)$', line)
         if dialogue_comment_match:
             prefix = dialogue_comment_match.group(2) or ""
+            
+            # Bloqueia falsos positivos (arquivos de áudio/comandos)
+            if prefix.strip() in ['voice', 'play music', 'play sound', 'play', 'sound', 'music', 'nvl clear', 'nvl']:
+                continue
+                
             next_regex = r'^(\s*)' + re.escape(prefix) + r'"(.*)"(?:[^"]*)$'
             
             found = False

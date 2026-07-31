@@ -9,3 +9,4 @@ delete_after_translate/
 tl/
 *.log
 .state.json
+.agents/
