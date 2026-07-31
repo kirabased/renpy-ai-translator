@@ -31,7 +31,9 @@ An automated and intelligent tool for translating visual novels made in the Ren'
        }
    ]
    ```
-4. **Set up `config.json`**:
+5. **Set up your `translation files`**:
+   Extract the `translation files` of your game with the [`Ren'Py Engine`](https://www.renpy.org/latest.html) "Generate Translations" function.
+6. **Set up `config.json`**:
    Rename the example file to `config.json`. Set the `input_folder` to the path where your extracted `.rpy` files are located.
 
 ### 📝 Example System Prompt (English)
