@@ -14,7 +14,8 @@ def extract_translatable_string(line):
     
     ignore_keywords = [
         'define', 'default', 'image', 'transform', 'screen', 'style', 'label', 
-        'jump', 'call', 'scene', 'show', 'hide', 'play', 'stop', 'pause', 'window', 'return', 'pass'
+        'jump', 'call', 'scene', 'show', 'hide', 'play', 'stop', 'pause', 'window', 'return', 'pass',
+        'old', 'new'
     ]
     first_word = line.strip().split(' ')[0]
     if first_word in ignore_keywords: return None
@@ -47,7 +48,30 @@ def process_file(filepath, input_folder):
         
     blocks = []
     
+    skip_next = False
     for i, line in enumerate(lines):
+        if skip_next:
+            skip_next = False
+            continue
+            
+        # Detecta blocos "translate strings" do SDK (old "texto" seguido de new "")
+        old_match = re.match(r'^(\s*)old\s+"(.*?)"\s*$', line)
+        if old_match and i + 1 < len(lines):
+            next_line = lines[i+1]
+            new_match = re.match(r'^(\s*)new\s+"(.*)"\s*$', next_line)
+            if new_match:
+                text_to_translate = old_match.group(2)
+                if text_to_translate.strip():
+                    blocks.append({
+                        'line_idx': i + 1,
+                        'original_line': next_line,
+                        'text_to_translate': text_to_translate,
+                        'start_idx': new_match.start(2),
+                        'end_idx': new_match.end(2)
+                    })
+                skip_next = True
+                continue
+                
         match = extract_translatable_string(line)
         if match:
             text = match.group(1)
