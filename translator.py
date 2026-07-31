@@ -48,10 +48,9 @@ def process_file(filepath, input_folder):
         
     blocks = []
     
-    skip_next = False
+    skip_lines = set()
     for i, line in enumerate(lines):
-        if skip_next:
-            skip_next = False
+        if i in skip_lines:
             continue
             
         # Detecta blocos "translate strings" do SDK (old "texto" seguido de new "")
@@ -69,29 +68,37 @@ def process_file(filepath, input_folder):
                         'start_idx': new_match.start(2),
                         'end_idx': new_match.end(2)
                     })
-                skip_next = True
+                skip_lines.add(i + 1)
                 continue
                 
         # Detecta blocos de diálogo do SDK (# char "texto original" seguido de char "")
         dialogue_comment_match = re.match(r'^(\s*)#\s*((?:[a-zA-Z0-9_]+\s+)*)"(.*?)"\s*$', line)
-        if dialogue_comment_match and i + 1 < len(lines):
-            next_line = lines[i+1]
+        if dialogue_comment_match:
             prefix = dialogue_comment_match.group(2) or ""
-            
             next_regex = r'^(\s*)' + re.escape(prefix) + r'"(.*)"\s*$'
-            new_dialogue_match = re.match(next_regex, next_line)
             
-            if new_dialogue_match:
-                text_to_translate = dialogue_comment_match.group(3)
-                if text_to_translate.strip():
-                    blocks.append({
-                        'line_idx': i + 1,
-                        'original_line': next_line,
-                        'text_to_translate': text_to_translate,
-                        'start_idx': new_dialogue_match.start(2),
-                        'end_idx': new_dialogue_match.end(2)
-                    })
-                skip_next = True
+            found = False
+            # Busca nas próximas 4 linhas (para pular comandos voice/sound no meio do bloco)
+            for offset in range(1, 5):
+                if i + offset >= len(lines): break
+                lookahead_line = lines[i+offset]
+                new_dialogue_match = re.match(next_regex, lookahead_line)
+                
+                if new_dialogue_match:
+                    text_to_translate = dialogue_comment_match.group(3)
+                    if text_to_translate.strip():
+                        blocks.append({
+                            'line_idx': i + offset,
+                            'original_line': lookahead_line,
+                            'text_to_translate': text_to_translate,
+                            'start_idx': new_dialogue_match.start(2),
+                            'end_idx': new_dialogue_match.end(2)
+                        })
+                    skip_lines.add(i + offset)
+                    found = True
+                    break
+                    
+            if found:
                 continue
                 
         match = extract_translatable_string(line)
