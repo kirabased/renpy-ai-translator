@@ -15,7 +15,7 @@ def extract_translatable_string(line):
     ignore_keywords = [
         'define', 'default', 'image', 'transform', 'screen', 'style', 'label', 
         'jump', 'call', 'scene', 'show', 'hide', 'play', 'stop', 'pause', 'window', 'return', 'pass',
-        'old', 'new'
+        'old', 'new', 'voice', 'nvl', 'music', 'sound'
     ]
     first_word = line.strip().split(' ')[0]
     if first_word in ignore_keywords: return None
@@ -68,6 +68,28 @@ def process_file(filepath, input_folder):
                         'text_to_translate': text_to_translate,
                         'start_idx': new_match.start(2),
                         'end_idx': new_match.end(2)
+                    })
+                skip_next = True
+                continue
+                
+        # Detecta blocos de diálogo do SDK (# char "texto original" seguido de char "")
+        dialogue_comment_match = re.match(r'^(\s*)#\s*((?:[a-zA-Z0-9_]+\s+)*)"(.*?)"\s*$', line)
+        if dialogue_comment_match and i + 1 < len(lines):
+            next_line = lines[i+1]
+            prefix = dialogue_comment_match.group(2) or ""
+            
+            next_regex = r'^(\s*)' + re.escape(prefix) + r'"(.*)"\s*$'
+            new_dialogue_match = re.match(next_regex, next_line)
+            
+            if new_dialogue_match:
+                text_to_translate = dialogue_comment_match.group(3)
+                if text_to_translate.strip():
+                    blocks.append({
+                        'line_idx': i + 1,
+                        'original_line': next_line,
+                        'text_to_translate': text_to_translate,
+                        'start_idx': new_dialogue_match.start(2),
+                        'end_idx': new_dialogue_match.end(2)
                     })
                 skip_next = True
                 continue
